@@ -138,7 +138,7 @@ export default function ProfileScreen({ navigation }) {
               <MaterialCommunityIcons name="shield-account" size={32} color={colors.primary} />
               <View style={styles.membershipInfo}>
                 <Text style={styles.membershipTitle}>Private Profile</Text>
-                <Text style={styles.membershipSince}>Login is required to see saved details on this device.</Text>
+                <Text style={styles.userEmail}>Login is required to see saved details on this device.</Text>
               </View>
             </LinearGradient>
           </View>

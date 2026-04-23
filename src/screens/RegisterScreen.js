@@ -64,9 +64,16 @@ export default function RegisterScreen({ navigation }) {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
     >
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+      >
         <LinearGradient colors={[colors.primary, colors.gradient.end]} style={styles.hero}>
           <View style={styles.iconWrap}>
             <MaterialCommunityIcons name="account-plus" size={36} color={colors.secondary} />
@@ -119,10 +126,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  scroll: {
+    flex: 1,
+  },
   content: {
     padding: 20,
     paddingTop: 48,
     paddingBottom: 28,
+    flexGrow: 1,
   },
   hero: {
     borderRadius: 28,

@@ -12,6 +12,33 @@ function sortEvents(events) {
   return [...events].sort(compareDates);
 }
 
+function getTodayString() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function isUpcomingEvent(eventDate) {
+  if (!eventDate) {
+    return false;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) {
+    return eventDate >= getTodayString();
+  }
+
+  const parsedDate = new Date(eventDate);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return false;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return parsedDate >= today;
+}
+
 function normalizeEvent(event) {
   return {
     id: String(event.id),
@@ -41,7 +68,7 @@ export async function list() {
     )
   );
 
-  return events;
+  return events.filter((event) => isUpcomingEvent(event.date));
 }
 
 export function formatEventDate(date) {

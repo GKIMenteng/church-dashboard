@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../utils/colors';
 
-export default function EventCard({ title, date, location, type }) {
+export default function EventCard({ title, date, location, type, onPress }) {
   const getTypeColor = () => {
     switch(type) {
       case 'Worship': return '#6B3FA0';
@@ -15,7 +15,7 @@ export default function EventCard({ title, date, location, type }) {
   };
 
   return (
-    <TouchableOpacity style={styles.container} activeOpacity={0.9}>
+    <TouchableOpacity style={styles.container} activeOpacity={0.9} onPress={onPress}>
       <LinearGradient
         colors={[colors.surfaceAlt, colors.surface]}
         style={styles.gradient}

@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Modal,
   View,
   Text,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Pressable,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -13,10 +15,75 @@ import { colors } from '../utils/colors';
 import EventCard from '../components/EventCard';
 import { list } from '../services/eventService';
 
+function formatVolunteerServices(volunteers) {
+  if (!volunteers) {
+    return [];
+  }
+
+  const orderedServices = [
+    { label: 'Worship Committee', aliases: ['worship committee', 'worship', 'committee'] },
+    { label: 'Musician', aliases: ['musician', 'music', 'band', 'singer'] },
+    { label: 'Soundman', aliases: ['soundman', 'sound man', 'sound'] },
+    { label: 'Multimedia', aliases: ['multimedia', 'media'] },
+    { label: 'Streaming', aliases: ['streaming', 'live streaming', 'live stream'] },
+  ];
+
+  const mapService = (name) => {
+    const normalized = String(name).toLowerCase();
+    return orderedServices.find((service) =>
+      service.aliases.some((alias) => normalized === alias || normalized.includes(alias))
+    )?.label;
+  };
+
+  const parseEntry = (entry) => {
+    if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+      return Object.entries(entry)
+        .map(([key, value]) => {
+          const label = mapService(key) || key;
+          const text = Array.isArray(value) ? value.join(', ') : String(value ?? '').trim();
+          return text ? { label, value: text } : null;
+        })
+        .filter(Boolean);
+    }
+
+    const text = String(entry ?? '').trim();
+    if (!text) {
+      return [];
+    }
+
+    const lineMatch = text.match(/^(.*?)(?:\s*[:\-–—]\s*)(.+)$/);
+    if (lineMatch) {
+      const label = mapService(lineMatch[1].trim()) || lineMatch[1].trim();
+      return [{ label, value: lineMatch[2].trim() }];
+    }
+
+    const label = mapService(text);
+    return label ? [{ label, value: '' }] : [{ label: 'Volunteer', value: text }];
+  };
+
+  const entries = Array.isArray(volunteers)
+    ? volunteers.flatMap((entry) => parseEntry(entry))
+    : String(volunteers)
+        .split(/\n+/)
+        .flatMap((line) =>
+          line
+            .split(/;+/)
+            .flatMap((segment) => parseEntry(segment.trim()))
+        );
+
+  return orderedServices
+    .map((service) => {
+      const found = entries.find((entry) => entry.label === service.label);
+      return found ? found : null;
+    })
+    .filter(Boolean);
+}
+
 export default function EventsScreen() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [debugInfo, setDebugInfo] = useState({
     status: 'idle',
     count: 0,
@@ -128,7 +195,7 @@ export default function EventsScreen() {
         ) : events.length === 0 ? (
           <View style={styles.stateCard}>
             <MaterialCommunityIcons name="calendar-blank-outline" size={24} color={colors.textLight} />
-            <Text style={styles.stateText}>No events found.</Text>
+            <Text style={styles.stateText}>No upcoming events found.</Text>
           </View>
         ) : (
           events.map((event) => (
@@ -138,10 +205,58 @@ export default function EventsScreen() {
               date={[event.date, event.time].filter(Boolean).join(' - ') || 'Date TBA'}
               location={event.location || 'Location TBA'}
               type={event.description || 'Event'}
+              onPress={() => setSelectedEvent(event)}
             />
           ))
         )}
       </View>
+
+      <Modal
+        visible={Boolean(selectedEvent)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedEvent(null)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setSelectedEvent(null)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalTitleWrap}>
+                <Text style={styles.modalTitle}>{selectedEvent?.title || 'Event Detail'}</Text>
+                <Text style={styles.modalSubtitle}>
+                  {selectedEvent ? [selectedEvent.date, selectedEvent.time].filter(Boolean).join(' • ') || 'Date TBA' : ''}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setSelectedEvent(null)} style={styles.modalCloseButton}>
+                <MaterialCommunityIcons name="close" size={20} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalSection}>
+              <Text style={styles.modalLabel}>Location</Text>
+              <Text style={styles.modalValue}>{selectedEvent?.location || 'Location TBA'}</Text>
+            </View>
+
+            <View style={styles.modalSection}>
+              <Text style={styles.modalLabel}>Type</Text>
+              <Text style={styles.modalValue}>{selectedEvent?.description || 'Event'}</Text>
+            </View>
+
+            <View style={styles.modalSection}>
+              <Text style={styles.modalLabel}>Volunteers</Text>
+              {formatVolunteerServices(selectedEvent?.volunteers).length > 0 ? (
+                formatVolunteerServices(selectedEvent?.volunteers).map((service) => (
+                  <View key={service.label} style={styles.volunteerRow}>
+                    <Text style={styles.volunteerLabel}>{service.label}</Text>
+                    <Text style={styles.volunteerValue}>{service.value || 'Not set'}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.modalValue}>Not set</Text>
+              )}
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -229,5 +344,86 @@ const styles = StyleSheet.create({
   retryText: {
     color: '#fff',
     fontWeight: '600',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(7, 10, 18, 0.72)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(244, 208, 111, 0.18)',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  modalTitleWrap: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  modalTitle: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  modalSubtitle: {
+    color: colors.textLight,
+    fontSize: 13,
+    marginTop: 6,
+  },
+  modalCloseButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceAlt,
+  },
+  modalSection: {
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  modalLabel: {
+    color: colors.secondary,
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  modalValue: {
+    color: colors.text,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  volunteerRow: {
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  volunteerLabel: {
+    color: colors.secondary,
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  volunteerValue: {
+    color: colors.text,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

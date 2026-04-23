@@ -1,90 +1,155 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View,
-  Text,
+  ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableOpacity,
-  Image,
+  View,
 } from 'react-native';
+import { signOut } from 'firebase/auth';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors } from '../utils/colors';
 
-export default function ProfileScreen() {
-  const menuItems = [
-    { icon: 'account-edit', label: 'Edit Profile', color: colors.primary },
-    { icon: 'bell-ring', label: 'Notifications', color: colors.secondary },
-    { icon: 'calendar-check', label: 'My Events', color: colors.tertiary },
-    { icon: 'book-open-page-variant', label: 'Bible Reading', color: '#8B4513' },
-    { icon: 'account-group', label: 'My Groups', color: '#6B3FA0' },
-    { icon: 'shield-check', label: 'Privacy Settings', color: '#D4AF37' },
-  ];
+import { auth } from '../firebase';
+import { colors } from '../utils/colors';
+import { getUserProfile } from '../services/userProfileService';
+
+export default function ProfileScreen({ navigation }) {
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState({
+    fullname: '',
+    nickname: '',
+    dateOfBirth: '',
+    phone: '',
+    email: '',
+  });
+
+  const loadProfile = useCallback(async () => {
+    const user = auth.currentUser;
+
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const savedProfile = await getUserProfile(user.uid);
+      setProfile({
+        fullname: savedProfile.fullname || user.displayName || '',
+        nickname: savedProfile.nickname || '',
+        dateOfBirth: savedProfile.dateOfBirth || '',
+        phone: savedProfile.phone || '',
+        email: savedProfile.email || user.email || '',
+      });
+    } catch (error) {
+      Alert.alert('Load failed', 'We could not load your profile right now.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [loadProfile])
+  );
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      Alert.alert('Sign out failed', 'We could not sign you out right now.');
+    }
+  };
+
+  const openEditProfile = () => {
+    const parentNavigation = navigation.getParent();
+    if (parentNavigation) {
+      parentNavigation.navigate('EditProfile');
+      return;
+    }
+
+    navigation.navigate('EditProfile');
+  };
+
+  const initials = (profile.fullname || profile.nickname || profile.email || 'U')
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={colors.secondary} />
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </View>
+    );
+  }
 
   return (
-    <ScrollView style={styles.container}>
-      <LinearGradient
-        colors={[colors.primary, colors.gradient.end]}
-        style={styles.header}
-      >
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <LinearGradient colors={[colors.primary, colors.gradient.end]} style={styles.header}>
         <View style={styles.profileImageContainer}>
           <View style={styles.profileImage}>
-            <Text style={styles.profileInitials}>BM</Text>
+            <Text style={styles.profileInitials}>{initials}</Text>
           </View>
-          <TouchableOpacity style={styles.editButton}>
-             <MaterialCommunityIcons name="camera" size={20} color={colors.primary} />
+          <TouchableOpacity style={styles.editButton} onPress={openEditProfile}>
+            <MaterialCommunityIcons name="pencil" size={18} color={colors.primary} />
           </TouchableOpacity>
         </View>
-        
-        <Text style={styles.userName}>Blessed Member</Text>
-        <Text style={styles.userEmail}>member@sanctuary.org</Text>
-        
+
+        <Text style={styles.userName}>{profile.fullname || 'Member Profile'}</Text>
+        <Text style={styles.userEmail}>{profile.email || auth.currentUser?.email || ''}</Text>
+
         <View style={styles.statsContainer}>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>156</Text>
-            <Text style={styles.statLabel}>Prayers</Text>
+            <Text style={styles.statValue}>{profile.nickname || '-'}</Text>
+            <Text style={styles.statLabel}>Nickname</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.stat}>
-            <Text style={styles.statValue}>24</Text>
-            <Text style={styles.statLabel}>Events</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>8</Text>
-            <Text style={styles.statLabel}>Groups</Text>
+            <Text style={styles.statValue}>{profile.dateOfBirth || '-'}</Text>
+            <Text style={styles.statLabel}>Date of Birth</Text>
           </View>
         </View>
       </LinearGradient>
 
       <View style={styles.content}>
         <View style={styles.membershipCard}>
-          <LinearGradient
-            colors={[colors.secondary, colors.tertiary]}
-            style={styles.membershipGradient}
-          >
-            <MaterialCommunityIcons name="crown" size={32} color={colors.primary} />
+          <LinearGradient colors={[colors.secondary, colors.tertiary]} style={styles.membershipGradient}>
+            <MaterialCommunityIcons name="account-box" size={32} color={colors.primary} />
             <View style={styles.membershipInfo}>
-              <Text style={styles.membershipTitle}>Premium Member</Text>
-              <Text style={styles.membershipSince}>Member since Jan 2024</Text>
+              <Text style={styles.membershipTitle}>Account Details</Text>
+              <Text style={styles.membershipSince}>Managed through Firebase Authentication</Text>
             </View>
           </LinearGradient>
         </View>
 
-        <View style={styles.menuContainer}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.menuItem}>
-              <View style={[styles.menuIcon, { backgroundColor: item.color + '20' }]}>
-                 <MaterialCommunityIcons name={item.icon} size={24} color={item.color} />
-              </View>
-              <Text style={styles.menuLabel}>{item.label}</Text>
-               <MaterialCommunityIcons name="chevron-right" size={24} color={colors.secondary} />
-            </TouchableOpacity>
-          ))}
+        <View style={styles.detailsCard}>
+          <ProfileRow label="Fullname" value={profile.fullname} icon="account" />
+          <ProfileRow label="Nickname" value={profile.nickname} icon="tag" />
+          <ProfileRow label="Date of Birth" value={profile.dateOfBirth} icon="calendar" />
+          <ProfileRow label="Phone" value={profile.phone} icon="phone" />
+          <ProfileRow label="Email" value={profile.email || auth.currentUser?.email || ''} icon="email" />
         </View>
 
-        <TouchableOpacity style={styles.logoutButton}>
-           <MaterialCommunityIcons name="logout" size={20} color={colors.error} />
+        <TouchableOpacity style={styles.actionButton} onPress={openEditProfile}>
+          <MaterialCommunityIcons name="account-edit" size={20} color={colors.primary} />
+          <Text style={styles.actionButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <MaterialCommunityIcons name="logout" size={20} color={colors.error} />
           <Text style={styles.logoutText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
@@ -92,10 +157,34 @@ export default function ProfileScreen() {
   );
 }
 
+function ProfileRow({ label, value, icon }) {
+  return (
+    <View style={styles.row}>
+      <View style={styles.rowIcon}>
+        <MaterialCommunityIcons name={icon} size={20} color={colors.secondary} />
+      </View>
+      <View style={styles.rowTextWrap}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        <Text style={styles.rowValue}>{value || 'Not set'}</Text>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  loading: {
+    flex: 1,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: colors.textLight,
+    marginTop: 12,
   },
   header: {
     padding: 25,
@@ -118,7 +207,7 @@ const styles = StyleSheet.create({
     borderColor: colors.background,
   },
   profileInitials: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
     color: colors.primary,
   },
@@ -158,11 +247,13 @@ const styles = StyleSheet.create({
   stat: {
     alignItems: 'center',
     paddingHorizontal: 20,
+    maxWidth: 140,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     color: colors.secondary,
+    textAlign: 'center',
   },
   statLabel: {
     fontSize: 12,
@@ -180,7 +271,7 @@ const styles = StyleSheet.create({
   membershipCard: {
     borderRadius: 15,
     overflow: 'hidden',
-    marginBottom: 25,
+    marginBottom: 18,
     elevation: 5,
     shadowColor: colors.secondary,
     shadowOffset: { width: 0, height: 3 },
@@ -205,35 +296,53 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textLight,
   },
-  menuContainer: {
-    marginBottom: 20,
+  detailsCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 18,
   },
-  menuItem: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 10,
-    elevation: 2,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    paddingVertical: 12,
   },
-  menuIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  rowIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(244, 208, 111, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: 12,
   },
-  menuLabel: {
+  rowTextWrap: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: '500',
+  },
+  rowLabel: {
+    color: colors.textLight,
+    fontSize: 12,
+    marginBottom: 3,
+  },
+  rowValue: {
     color: colors.text,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    marginBottom: 12,
+  },
+  actionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
+    marginLeft: 10,
   },
   logoutButton: {
     flexDirection: 'row',

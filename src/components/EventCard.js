@@ -17,7 +17,7 @@ export default function EventCard({ title, date, location, type }) {
   return (
     <TouchableOpacity style={styles.container} activeOpacity={0.9}>
       <LinearGradient
-        colors={['#fff', colors.background]}
+        colors={[colors.surfaceAlt, colors.surface]}
         style={styles.gradient}
       >
         <View style={styles.leftBorder} />
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: colors.surface,
   },
   avatarText: {
     color: '#fff',

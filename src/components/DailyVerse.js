@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
@@ -54,18 +54,18 @@ const styles = StyleSheet.create({
   },
   reference: {
     fontSize: 14,
-    color: colors.text,
+    color: colors.surface,
     marginTop: 10,
     fontWeight: '500',
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(107, 63, 160, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     marginVertical: 12,
   },
   reflection: {
     fontSize: 14,
-    color: colors.textLight,
+    color: colors.background,
     fontStyle: 'italic',
   },
 });

@@ -1,16 +1,18 @@
 export const colors = {
-  primary: '#6B3FA0',      // Royal Purple
-  secondary: '#D4AF37',    // Gold
-  tertiary: '#C5A059',     // Antique Gold
-  background: '#F5F0F6',   // Soft Lavender White
-  surface: '#FFFFFF',
-  text: '#2C1810',         // Rich Brown
-  textLight: '#6B4B3A',    // Warm Brown
-  accent: '#8B4513',       // Saddle Brown
-  error: '#DC143C',        // Crimson
-  success: '#2E8B57',      // Sea Green
+  primary: '#9B7CFF',
+  secondary: '#F4D06F',
+  tertiary: '#B88C4A',
+  background: '#0B1020',
+  surface: '#131A2B',
+  surfaceAlt: '#1A2338',
+  text: '#F6F8FF',
+  textLight: '#A7B2CC',
+  muted: '#7886A7',
+  accent: '#D9A56F',
+  error: '#FF6B81',
+  success: '#47C97A',
   gradient: {
-    start: '#8B5FBF',
-    end: '#4B2D7D'
+    start: '#1A2340',
+    end: '#090D17'
   }
 };

@@ -25,12 +25,13 @@ export default function EventsScreen() {
           markedDates={markedDates}
           theme={{
             calendarBackground: colors.surface,
-            textSectionTitleColor: colors.text,
+            backgroundColor: colors.surface,
+            textSectionTitleColor: colors.textLight,
             selectedDayBackgroundColor: colors.primary,
             selectedDayTextColor: '#fff',
             todayTextColor: colors.secondary,
             dayTextColor: colors.text,
-            textDisabledColor: '#d9e1e8',
+            textDisabledColor: colors.muted,
             dotColor: colors.primary,
             selectedDotColor: '#fff',
             arrowColor: colors.primary,

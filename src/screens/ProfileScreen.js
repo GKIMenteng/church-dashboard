@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: colors.background,
   },
   profileInitials: {
     fontSize: 36,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 3,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.error + '40',
+    borderColor: 'rgba(255, 107, 129, 0.35)',
   },
   logoutText: {
     fontSize: 16,

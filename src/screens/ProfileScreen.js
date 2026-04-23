@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { signOut } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,6 +20,7 @@ import { getUserProfile } from '../services/userProfileService';
 
 export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(auth.currentUser);
   const [profile, setProfile] = useState({
     fullname: '',
     nickname: '',
@@ -31,6 +33,13 @@ export default function ProfileScreen({ navigation }) {
     const user = auth.currentUser;
 
     if (!user) {
+      setProfile({
+        fullname: '',
+        nickname: '',
+        dateOfBirth: '',
+        phone: '',
+        email: '',
+      });
       setLoading(false);
       return;
     }
@@ -53,8 +62,16 @@ export default function ProfileScreen({ navigation }) {
   }, []);
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user || null);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
     loadProfile();
-  }, [loadProfile]);
+  }, [loadProfile, currentUser]);
 
   useFocusEffect(
     useCallback(() => {
@@ -71,6 +88,11 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const openEditProfile = () => {
+    if (!currentUser) {
+      navigation.navigate('Login');
+      return;
+    }
+
     const parentNavigation = navigation.getParent();
     if (parentNavigation) {
       parentNavigation.navigate('EditProfile');
@@ -96,6 +118,45 @@ export default function ProfileScreen({ navigation }) {
     );
   }
 
+  if (!currentUser) {
+    return (
+      <ScrollView style={styles.container} contentContainerStyle={styles.guestContainer} showsVerticalScrollIndicator={false}>
+        <LinearGradient colors={[colors.primary, colors.gradient.end]} style={styles.guestHeader}>
+          <View style={styles.profileImageContainer}>
+            <View style={styles.profileImage}>
+              <MaterialCommunityIcons name="account-outline" size={34} color={colors.primary} />
+            </View>
+          </View>
+
+          <Text style={styles.userName}>Member Profile</Text>
+          <Text style={styles.userEmail}>Sign in to view your personal profile details.</Text>
+        </LinearGradient>
+
+        <View style={styles.content}>
+          <View style={styles.membershipCard}>
+            <LinearGradient colors={[colors.secondary, colors.tertiary]} style={styles.membershipGradient}>
+              <MaterialCommunityIcons name="shield-account" size={32} color={colors.primary} />
+              <View style={styles.membershipInfo}>
+                <Text style={styles.membershipTitle}>Private Profile</Text>
+                <Text style={styles.membershipSince}>Login is required to see saved details on this device.</Text>
+              </View>
+            </LinearGradient>
+          </View>
+
+          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Login')}>
+            <MaterialCommunityIcons name="login" size={20} color={colors.primary} />
+            <Text style={styles.actionButtonText}>Login</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Register')}>
+            <MaterialCommunityIcons name="account-plus" size={20} color={colors.primary} />
+            <Text style={styles.actionButtonText}>Register</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <LinearGradient colors={[colors.primary, colors.gradient.end]} style={styles.header}>
@@ -109,7 +170,7 @@ export default function ProfileScreen({ navigation }) {
         </View>
 
         <Text style={styles.userName}>{profile.fullname || 'Member Profile'}</Text>
-        <Text style={styles.userEmail}>{profile.email || auth.currentUser?.email || ''}</Text>
+        <Text style={styles.userEmail}>{profile.email || currentUser?.email || ''}</Text>
 
         <View style={styles.statsContainer}>
           <View style={styles.stat}>
@@ -140,7 +201,7 @@ export default function ProfileScreen({ navigation }) {
           <ProfileRow label="Nickname" value={profile.nickname} icon="tag" />
           <ProfileRow label="Date of Birth" value={profile.dateOfBirth} icon="calendar" />
           <ProfileRow label="Phone" value={profile.phone} icon="phone" />
-          <ProfileRow label="Email" value={profile.email || auth.currentUser?.email || ''} icon="email" />
+          <ProfileRow label="Email" value={profile.email || currentUser?.email || ''} icon="email" />
         </View>
 
         <TouchableOpacity style={styles.actionButton} onPress={openEditProfile}>
@@ -185,6 +246,16 @@ const styles = StyleSheet.create({
   loadingText: {
     color: colors.textLight,
     marginTop: 12,
+  },
+  guestContainer: {
+    flexGrow: 1,
+    backgroundColor: colors.background,
+  },
+  guestHeader: {
+    padding: 25,
+    alignItems: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   header: {
     padding: 25,

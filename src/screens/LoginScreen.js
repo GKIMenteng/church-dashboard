@@ -31,6 +31,10 @@ export default function LoginScreen({ navigation }) {
     try {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email.trim(), password);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainTabs', params: { screen: 'Profile' } }],
+      });
     } catch (error) {
       Alert.alert('Login failed', error?.message || 'Unable to sign in right now.');
     } finally {

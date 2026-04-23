@@ -50,6 +50,10 @@ export default function RegisterScreen({ navigation }) {
         phone: phone.trim(),
         email: email.trim(),
       });
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainTabs', params: { screen: 'Profile' } }],
+      });
     } catch (error) {
       Alert.alert('Registration failed', error?.message || 'Unable to create your account right now.');
     } finally {

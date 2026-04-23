@@ -100,19 +100,12 @@ function TabNavigator() {
   );
 }
 
-function AuthStack() {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
-    </Stack.Navigator>
-  );
-}
-
 function AppStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={TabNavigator} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen
         name="EditProfile"
         component={EditProfileScreen}
@@ -138,21 +131,21 @@ function LoadingScreen() {
 }
 
 export default function AppNavigator() {
-  const [user, setUser] = useState(undefined);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser || null);
+    const unsubscribe = onAuthStateChanged(auth, () => {
+      setAuthReady(true);
     });
 
     return unsubscribe;
   }, []);
 
-  if (user === undefined) {
+  if (!authReady) {
     return <LoadingScreen />;
   }
 
-  return user ? <AppStack /> : <AuthStack />;
+  return <AppStack />;
 }
 
 const styles = {

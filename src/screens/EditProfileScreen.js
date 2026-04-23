@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { updateEmail, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged, updateEmail, updateProfile } from 'firebase/auth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -22,6 +22,7 @@ import { getUserProfile, saveUserProfile } from '../services/userProfileService'
 export default function EditProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [currentUser, setCurrentUser] = useState(auth.currentUser);
   const [fullname, setFullname] = useState('');
   const [nickname, setNickname] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -29,8 +30,16 @@ export default function EditProfileScreen({ navigation }) {
   const [email, setEmail] = useState('');
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user || null);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
     const loadProfile = async () => {
-      const user = auth.currentUser;
+      const user = currentUser;
 
       if (!user) {
         setLoading(false);
@@ -52,12 +61,12 @@ export default function EditProfileScreen({ navigation }) {
     };
 
     loadProfile();
-  }, [navigation]);
+  }, [currentUser]);
 
   const handleSave = async () => {
-    const user = auth.currentUser;
+    const user = currentUser;
     if (!user) {
-      Alert.alert('Session ended', 'Please sign in again.');
+      Alert.alert('Session ended', 'Please sign in to edit your profile.');
       return;
     }
 
@@ -96,6 +105,41 @@ export default function EditProfileScreen({ navigation }) {
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={colors.secondary} />
         <Text style={styles.loadingText}>Loading profile...</Text>
+      </View>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <LinearGradient colors={[colors.primary, colors.gradient.end]} style={styles.hero}>
+            <View style={styles.iconWrap}>
+              <MaterialCommunityIcons name="account-lock" size={36} color={colors.secondary} />
+            </View>
+            <Text style={styles.title}>Edit Profile</Text>
+            <Text style={styles.subtitle}>Please sign in first to view or change your personal details.</Text>
+          </LinearGradient>
+
+          <View style={styles.card}>
+            <Text style={styles.label}>Access required</Text>
+            <Text style={styles.noticeText}>
+              Your profile editor is only available after login, because it contains private user details.
+            </Text>
+
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
+              <LinearGradient colors={[colors.secondary, colors.tertiary]} style={styles.buttonGradient}>
+                <Text style={styles.buttonText}>Go to Login</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.linkButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.linkText}>
+                <Text style={styles.linkTextStrong}>Back</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -185,6 +229,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginTop: 8,
+  },
+  noticeText: {
+    color: colors.textLight,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 6,
   },
   card: {
     backgroundColor: colors.surface,

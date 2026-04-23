@@ -21,10 +21,16 @@
         "backgroundColor": "#0B1020"
       },
       "edgeToEdgeEnabled": true,
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "resize",
+      "package": "com.church.dashboard"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "564d82be-9ce6-41d4-aafe-7104840168f1"
+      }
     }
   }
 }

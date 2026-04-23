@@ -13,14 +13,13 @@ import { colors } from '../utils/colors';
 import DailyVerse from '../components/DailyVerse';
 import PrayerCard from '../components/PrayerCard';
 import EventCard from '../components/EventCard';
-import GivingProgress from '../components/GivingProgress';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const quickActions = [
     { icon: 'hands-pray', label: 'Pray', color: '#6B3FA0' },
-    { icon: 'hand-coin', label: 'Give', color: '#D4AF37' },
+    { icon: 'book-open-page-variant', label: 'Bible', color: '#D4AF37' },
     { icon: 'calendar', label: 'Events', color: '#C5A059' },
     { icon: 'account-group', label: 'Community', color: '#8B4513' },
   ];
@@ -104,19 +103,6 @@ export default function HomeScreen() {
           type="Study"
         />
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Building Fund Campaign</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>Donate</Text>
-          </TouchableOpacity>
-        </View>
-
-        <GivingProgress
-          title="New Sanctuary Building"
-          raised={75000}
-          goal={100000}
-          currency="$"
-        />
       </View>
     </ScrollView>
   );

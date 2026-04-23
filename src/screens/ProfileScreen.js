@@ -16,7 +16,7 @@ export default function ProfileScreen() {
     { icon: 'account-edit', label: 'Edit Profile', color: colors.primary },
     { icon: 'bell-ring', label: 'Notifications', color: colors.secondary },
     { icon: 'calendar-check', label: 'My Events', color: colors.tertiary },
-    { icon: 'hand-coin', label: 'Giving History', color: '#8B4513' },
+    { icon: 'book-open-page-variant', label: 'Bible Reading', color: '#8B4513' },
     { icon: 'account-group', label: 'My Groups', color: '#6B3FA0' },
     { icon: 'shield-check', label: 'Privacy Settings', color: '#D4AF37' },
   ];

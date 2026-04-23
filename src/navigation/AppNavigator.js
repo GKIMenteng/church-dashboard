@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import HomeScreen from '../screens/HomeScreen';
 import EventsScreen from '../screens/EventsScreen';
-import GivingScreen from '../screens/GivingScreen';
+import DigitalBible from '../screens/DigitalBible';
 import PrayerScreen from '../screens/PrayerScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { colors } from '../utils/colors';
@@ -74,13 +74,13 @@ function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Giving"
-        component={GivingScreen}
+        name="Bible"
+        component={DigitalBible}
         options={{
           tabBarIcon: ({ color, size }) => (
-             <MaterialCommunityIcons name="hand-heart" size={size} color={color} />
+             <MaterialCommunityIcons name="book-open-page-variant" size={size} color={color} />
           ),
-          headerTitle: 'Sacred Giving',
+          headerTitle: 'Digital Bible',
         }}
       />
       <Tab.Screen
